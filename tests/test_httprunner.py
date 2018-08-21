@@ -2,6 +2,7 @@ import os
 import shutil
 
 from httprunner import HttpRunner
+from tests.api_server import HTTPBIN_SERVER
 from tests.base import ApiServerUnittest
 
 
@@ -22,7 +23,7 @@ class TestHttpRunner(ApiServerUnittest):
                 'output': ['token']
             },
             'api': {},
-            'testcases': [
+            'teststeps': [
                 {
                     'name': '/api/get-token',
                     'request': {
@@ -89,7 +90,8 @@ class TestHttpRunner(ApiServerUnittest):
         summary = runner.summary
         self.assertTrue(summary["success"])
         self.assertEqual(summary["stat"]["testsRun"], 2)
-        self.assertIn("records", summary)
+        self.assertIn("details", summary)
+        self.assertIn("records", summary["details"][0])
 
     def test_run_testset(self):
         testsets = self.testset
@@ -97,7 +99,7 @@ class TestHttpRunner(ApiServerUnittest):
         summary = runner.summary
         self.assertTrue(summary["success"])
         self.assertEqual(summary["stat"]["testsRun"], 2)
-        self.assertIn("records", summary)
+        self.assertIn("records", summary["details"][0])
 
     def test_run_yaml_upload(self):
         testset_path = "tests/httpbin/upload.yml"
@@ -105,17 +107,18 @@ class TestHttpRunner(ApiServerUnittest):
         summary = runner.summary
         self.assertTrue(summary["success"])
         self.assertEqual(summary["stat"]["testsRun"], 1)
-        self.assertIn("records", summary)
+        self.assertIn("details", summary)
+        self.assertIn("records", summary["details"][0])
 
     def test_run_post_data(self):
         testsets = [
             {
                 "name": "post data",
-                "testcases": [
+                "teststeps": [
                     {
                         "name": "post data",
                         "request": {
-                            "url": "http://127.0.0.1:3458/post",
+                            "url": "{}/post".format(HTTPBIN_SERVER),
                             "method": "POST",
                             "headers": {
                                 "Content-Type": "application/json"
@@ -134,7 +137,7 @@ class TestHttpRunner(ApiServerUnittest):
         summary = runner.summary
         self.assertTrue(summary["success"])
         self.assertEqual(summary["stat"]["testsRun"], 1)
-        self.assertEqual(summary["records"][0]["meta_data"]["response_body"]["data"], "abc")
+        self.assertEqual(summary["details"][0]["records"][0]["meta_data"]["response"]["json"]["data"], "abc")
 
     def test_html_report_repsonse_image(self):
         testset_path = "tests/httpbin/load_image.yml"
